@@ -1,0 +1,31 @@
+# sudo docker login --username=木子镓 crpi-wnfek3pn2k4kqc1p.cn-chengdu.personal.cr.aliyuncs.com
+# docker-compose up -d
+# docker-compose build --no-cache && docker-compose up -d
+
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "9090:8080"
+    container_name: "api"
+    restart: always
+    networks:
+      - api-backend
+
+  # 后端代理
+  nginx-api:
+    image: crpi-wnfek3pn2k4kqc1p.cn-chengdu.personal.cr.aliyuncs.com/lijia-images/nginx:latest
+    container_name: nginx-api
+    volumes:
+      - ./config/nginx/conf.d/api.conf:/deploy/nginx/conf.d/api.conf
+    ports:
+      - "1010:8080"
+    depends_on:
+      - api
+    networks:
+      - api-backend
+
+networks:
+  api-backend:
+    driver: bridge

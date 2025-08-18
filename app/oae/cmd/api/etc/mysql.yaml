@@ -1,0 +1,8 @@
+Hosts: 172.16.40.204
+Port: 3306
+User: root
+Enable: true
+Password: oaeadmin
+Dbname: mesas_test
+MaxidleConnection: 10
+MaxopenConnection: 10

@@ -1,0 +1,9 @@
+syntax = "v1"
+
+import "../common/common.api"
+
+type ManuscriptInfo {
+    Id int64 `json:"id"`
+    Status string `json:"status"`
+    Title string `json:"title"`
+}

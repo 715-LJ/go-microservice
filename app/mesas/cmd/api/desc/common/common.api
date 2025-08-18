@@ -1,0 +1,13 @@
+syntax = "v1"
+
+type PageRequest {
+    PageNo int64 `form:"pageNo,optional"`
+    PageSize int64 `form:"pageSize,optional"`
+    Keyword string `form:"keyword,optional"`
+}
+
+type PageResponse {
+    Total int64 `json:"total"`
+    PageNo int64 `json:"page"`
+    PageSize int64 `json:"pageSize"`
+}

@@ -1,0 +1,7 @@
+Conn: 127.0.0.1:6379
+Password: "sase@cl0ud"
+DBNum: 0
+Timeout: 3
+Enabled: true
+
+
