@@ -100,6 +100,16 @@ $ go mod tidy
 本项目采用modd热加载功即时修改代码及时生效，并且不需要每次都要重启，改了代码自动就在容器中重新加载了，本地不需要启动服务，本地安装的sdk就是写代码自动提示使用的，实际运行是以来容器中 lyumikael/go-modd-env:
 v1.0.0的golang环境。所以使用goland、vscode都一样
 
+```shell
+go install github.com/cortesi/modd/cmd/modd@latest
+modd.conf
+    app/mesas/cmd/api/**/*.go {
+        prep: go build -o data/server/mesas-api  -v app/mesas/cmd/api/mesas.go
+        daemon +sigkill: ./data/server/mesas-api -f app/mesas/cmd/api/etc/mesas-api.yaml
+    }
+modd
+```
+
 #### 2、启动服务
 
 ##### 2.1 拉取运行环境镜像
