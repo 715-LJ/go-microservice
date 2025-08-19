@@ -7,6 +7,9 @@
 - docker-compose
 - mysql
 - redis
+- gorm
+- Xerr
+- Basic
 
 项目目录结构如下：
 
@@ -91,6 +94,7 @@ app/mesas/cmd/api/**/*.go {
 }
 modd
 ```
+
 ![](./doc/images/screenshot-20250819-152705.png)
 
 - Golang 编辑器调试器，可以按照微服务模块设置不同的编译器，
@@ -130,6 +134,89 @@ http://127.0.0.1:1010/oae/v1/manuscript/1
 ##### 2.3 项目部署
 
 - docker-compose.yml
-  - 采用分服务构建基础镜像，将基础镜像作为服务依赖，可以实现手动扩容，对内保留唯一不变端口，对外随机分配端口值，nginx做统一代理。
-  - ![](./doc/images/screenshot-20250819-152211.png)
+    - 采用分服务构建基础镜像，将基础镜像作为服务依赖，可以实现手动扩容，对内保留唯一不变端口，对外随机分配端口值，nginx做统一代理。
+    - ![](./doc/images/screenshot-20250819-152211.png)
 - docker-compose.override.yml
+    - 扩展容器配置，配置或覆盖docker-compose.yml
+
+#### 3、Gorm
+
+GORM 的语法更符合 Go 的语言特点，不需要太多复杂的配置或方法调用。
+
+- 结构体与数据库表的自动映射
+  ![](./doc/images/screenshot-20250819-155228.png)
+- 支持多种数据库
+
+```shell
+func NewManuscriptModel() ManuscriptModel {
+	return &defaultmanuscriptModel{
+		conn: mysql.GetDB(),
+	}
+}
+```
+
+- 链式调用
+
+```shell
+manuscript := &Manuscript{}
+
+if err := this.conn.Where(Manuscript{Id: manuscriptId}).First(&manuscript).Error; err != nil {
+    return nil, err
+
+}
+
+return manuscript, nil
+```
+
+- Hooks 和回调机制
+
+```shell
+func (user *User) BeforeCreate(tx *gorm.DB) (err error) {
+    // 在创建用户之前执行的逻辑
+    return
+}
+```
+
+- 事务支持
+
+```shell
+tx := db.Begin()
+if err := tx.Create(&manuscript).Error; err != nil {
+    tx.Rollback()
+    return err
+}
+tx.Commit()
+```
+
+- 结构体与数据库表的自动映射
+
+```shell
+GORM 可以自动将 Go 结构体映射到数据库表，并且可以轻松处理表的关联关系（如一对一、一对多、多对多）。这使得开发者在编写模型时，不需要手动创建大量的 SQL 语句。
+type User struct {
+    gorm.Model
+    Name string
+    Orders []Order
+}
+```
+
+- 预加载（Preloading）和关联查询
+
+```shell
+var users []User
+db.Preload("Orders").Find(&users)
+
+```
+
+#### 4、Xerr
+
+/common/xerr
+
+```shell
+if err != nil {
+    return nil, xerr.NewErrCodeMsg(xerr.SERVER_COMMON_ERROR, xerr.MapErrMsg(xerr.SERVER_COMMON_ERROR))
+}
+```
+
+定义错误码：/common/xerr/errCode.go
+
+定义错信息：/common/xerr/errMsg.go
