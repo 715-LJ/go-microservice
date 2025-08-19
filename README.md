@@ -1,16 +1,12 @@
 ### go-microservice
 
-- k8s
 - go-zero
 - nginx网关
 - elasticsearch
-- go-queue
 - docker
 - docker-compose
 - mysql
 - redis
-- jenkins
-- gitlab
 
 项目目录结构如下：
 
@@ -27,6 +23,7 @@
                     - svc：上下文配置
                     - types：系统定义结构体
                 - mesas.go：
+                - Dockerfile：镜像构建脚本
         - model：模型层代码
     - oae
 - common：
@@ -39,18 +36,16 @@
     - template：配置脚手架模板
     - translator：错误翻译
     - xerr：错误码及错误信息配置
+- data：临时文件
 - deploy：
     - nginx：网关配置
     - script：
         - mysql：生成model的sh工具
-- deploy.sh 更新脚本
 - docker-compose.yml：容器脚本
-- Dockerfile：镜像构建脚本
 - go.mod：模块依赖
 - go.sum：模块依赖
 - Makefile：执行命令脚本
 - README.md：描述
-- update.sh：更新脚本
 
 ## 网关
 
@@ -59,25 +54,6 @@ nginx做对外网关
 ## 开发模式
 
 本项目使用的是微服务开发，api （http） + rpc（grpc） ， api充当聚合服务，复杂、涉及到其他业务调用的统一写在rpc中，如果一些不会被其他服务依赖使用的简单业务，可以直接写在api的logic中
-
-## 日志
-
-关于日志，统一使用filebeat收集，上报到kafka中，由于logstash懂得都懂，资源占用太夸张了，这里使用了go-stash替换了logstash
-
-链接：https://github.com/kevwan/go-stash
-go-stash是由go-zero开发团队开发的，性能很高不占资源，主要代码量没多少，只需要配置就可以使用，很简单。它是把kafka数据源同步到elasticsearch中，默认不支持elasticsearch账号密码，我fork了一份修改了一下，很简单支持了账号、密码
-
-## 发布订阅
-
-发布订阅使用的是go-zero开发团队开发的go-queue， 链接：https://github.com/zeromicro/go-queue
-
-## 消息队列、延迟队列、定时任务
-
-消息队列、延迟队列、定时任务本项目使用的是asynq ，基于redis开发的简单中间件，
-
-当然，消息队列你也可以使用go-queue
-
-链接：https://github.com/hibiken/asynq
 
 ## 部署
 
@@ -97,16 +73,15 @@ $ git clone https://github.com/715-LJ/go-microservice.git
 $ go mod tidy
 ```
 
-本项目采用modd热加载功即时修改代码及时生效，并且不需要每次都要重启，改了代码自动就在容器中重新加载了，本地不需要启动服务，本地安装的sdk就是写代码自动提示使用的，实际运行是以来容器中 lyumikael/go-modd-env:
-v1.0.0的golang环境。所以使用goland、vscode都一样
+本项目采用modd热加载功即时修改代码及时生效，并且不需要每次都要重启，改了代码自动就在容器中重新加载了，本地不需要启动服务。
 
 ```shell
 go install github.com/cortesi/modd/cmd/modd@latest
 modd.conf
-    app/mesas/cmd/api/**/*.go {
-        prep: go build -o data/server/mesas-api  -v app/mesas/cmd/api/mesas.go
-        daemon +sigkill: ./data/server/mesas-api -f app/mesas/cmd/api/etc/mesas-api.yaml
-    }
+app/mesas/cmd/api/**/*.go {
+    prep: go build -o data/server/mesas-api  -v app/mesas/cmd/api/mesas.go
+    daemon +sigkill: ./data/server/mesas-api -f app/mesas/cmd/api/etc/mesas-api.yaml
+}
 modd
 ```
 
@@ -119,16 +94,6 @@ modd
 前台app下所有api+rpc服务统一使用modd + golang
 
 直接docker-compose去启动可以，但是考虑依赖可能会比较大，会影响启动项目，所以最好先把这个镜像拉取下来再去启动项目
-
-```shell
-$ docker pull lyumikael/gomodd:v1.20.3 #这个是app下所有的api+rpc启动服务使用的，如果你是 "mac m1" : lyumikael/go-modd-env:v1.0.0
-```
-
-【注】后续如果app下新增业务，要记得在项目根目录下的modd.conf复制添加一份就可以了
-
-​ 关于modd更多用法可以去这里了解 ： https://github.com/cortesi/modd ， 本项目镜像只是将golang-1.17.7-alpine作为基础镜像安装了modd在内部，
-
-如果你想把goctl、protoc、golint等加进去，不用我的镜像直接制作一个镜像也一样的哈
 
 ##### 2.2 启动项目
 

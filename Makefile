@@ -18,27 +18,19 @@ init:
 	fi
 	goctl api go -api $(API_FILE) -dir $(WORK_DIR) --style=goZero --home=$(TEMPLATE_DIR)
 
-deploy:
-	@echo "Generating Deploy Service"
-	@if [ ! -f "./deploy.sh" ]; then \
-		echo "Error: deploy.sh not found"; \
-		exit 1; \
-	fi
-	@if [ ! -x "./deploy.sh" ]; then \
-		echo "Error: deploy.sh is not executable"; \
-		exit 1; \
-	fi
-	@./deploy.sh && echo "Deploy completed successfully" || (echo "Deploy failed"; exit 1)
+up:
+	@echo "Pulling latest code..."
+	git pull
+
+	@echo "Starting new container..."
+	docker-compose up -d
+	@echo "Deployment completed successfully."
 
 update:
-	@echo "Generating Update Service"
-	@if [ ! -f ./update.sh ]; then \
-		echo "Error: update.sh not found"; \
-		exit 1; \
-	fi
-	@if [ ! -x ./update.sh ]; then \
-		echo "Error: update.sh is not executable"; \
-		exit 1; \
-	fi
-	@./update.sh || (echo "Error: Update script failed"; exit 1)
+	@echo "Pulling latest code..."
+	git pull
+
+	@echo "Starting new container..."
+	docker-compose build --no-cache && docker-compose up -d
+	@echo "Deployment completed successfully."
 

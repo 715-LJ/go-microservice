@@ -2,10 +2,10 @@ package manuscript
 
 import (
 	"context"
-	"math/rand"
-
 	"go-microservice/app/oae/cmd/api/internal/svc"
 	"go-microservice/app/oae/cmd/api/internal/types"
+	"go-microservice/common/logc"
+	"math/rand"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -26,6 +26,10 @@ func NewGetManuscriptLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 }
 
 func (l *GetManuscriptLogic) GetManuscript() (resp *types.ManuscriptInfo, err error) {
+	customLogger := &logc.CustomLogger{}
+	customLogger.Error(l.ctx, "This is an error message", "additional data")
+	customLogger.Info(l.ctx, "This is an info message", "additional data")
+
 	return &types.ManuscriptInfo{
 		Id:     int64(rand.Int()),
 		Status: "OK",
