@@ -44,6 +44,43 @@ services:
     networks:
       - api-backend
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - api-backend
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql@123
+      MYSQL_DATABASE: microservice
+      MYSQL_USER: go
+      MYSQL_PASSWORD: go@123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - api-backend
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 networks:
   api-backend:
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
