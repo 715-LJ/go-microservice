@@ -59,11 +59,6 @@ nginx做对外网关
 
 本项目开发环境推荐docker-compose
 
-gitlab + jenkins + harbor + k8s
-
-在jenkins中点击部署对应的服务，会去gitlab拉取代码-->再去拉取线上配置（线上配置单独一个git库，为什么不用配置中心，部署文档中有介绍）---->自动构建镜像-->推送到harbor镜像仓库--->
-使用kubectl自动发布到k8s中---->前面要挂一个nginx做网关统一入口
-
 ### 项目环境搭建
 
 #### 1、clone代码&更新依赖
@@ -71,18 +66,6 @@ gitlab + jenkins + harbor + k8s
 ```shell
 $ git clone https://github.com/715-LJ/go-microservice.git
 $ go mod tidy
-```
-
-本项目采用modd热加载功即时修改代码及时生效，并且不需要每次都要重启，改了代码自动就在容器中重新加载了，本地不需要启动服务。
-
-```shell
-go install github.com/cortesi/modd/cmd/modd@latest
-modd.conf
-app/mesas/cmd/api/**/*.go {
-    prep: go build -o data/server/mesas-api  -v app/mesas/cmd/api/mesas.go
-    daemon +sigkill: ./data/server/mesas-api -f app/mesas/cmd/api/etc/mesas-api.yaml
-}
-modd
 ```
 
 #### 2、启动服务
@@ -93,13 +76,60 @@ modd
 
 前台app下所有api+rpc服务统一使用modd + golang
 
-直接docker-compose去启动可以，但是考虑依赖可能会比较大，会影响启动项目，所以最好先把这个镜像拉取下来再去启动项目
+直接docker-compose去启动可以，但是考虑依赖可能会比较大会影响启动项目，有私有镜像仓库可以先把镜像拉取下来再去启动项目。
 
-##### 2.2 启动项目
+##### 2.2 启动项目(开发模式)
+
+- 推荐modd热编译模式，实现热加载，开发过程不用每次都手动编译
 
 ```shell
-$ docker-compose up -d 
+go install github.com/cortesi/modd/cmd/modd@latest
+modd.conf
+app/mesas/cmd/api/**/*.go {
+    prep: go build -o data/server/mesas-api  -v app/mesas/cmd/api/mesas.go
+    daemon +sigkill: ./data/server/mesas-api -f app/mesas/cmd/api/etc/mesas-api.yaml
+}
+modd
+```
+![](./doc/images/screenshot-20250819-152705.png)
+
+- Golang 编辑器调试器，可以按照微服务模块设置不同的编译器，
+    - 运行类型：目录
+    - 运行路径/工作目录：/Users/lijia/go/src/go-microservice/app/mesas/cmd/api
+
+![](./doc/images/screenshot-20250819-152832.png)
+![](./doc/images/screenshot-20250819-153102.png)
+
+```shell
+API测试地址
+http://127.0.0.1:1001/v1/manuscript/1
+http://127.0.0.1:1002/v1/manuscript/1
+```
+
+##### 2.3 启动项目(线上模式)
+
+Makefile 规则编译脚本
+
+- make init：初始化服务模块及生成脚手架代码
+- make up：启动服务
+- make update：更新服务
+
+```shell
+$ make up
+$ make update
 ```
 
 【注】依赖的是项目根目录下的docker-compose.yml配置
 
+```shell
+API测试地址
+http://127.0.0.1:1010/mesas/v1/manuscript/1
+http://127.0.0.1:1010/oae/v1/manuscript/1
+```
+
+##### 2.3 项目部署
+
+- docker-compose.yml
+  - 采用分服务构建基础镜像，将基础镜像作为服务依赖，可以实现手动扩容，对内保留唯一不变端口，对外随机分配端口值，nginx做统一代理。
+  - ![](./doc/images/screenshot-20250819-152211.png)
+- docker-compose.override.yml
