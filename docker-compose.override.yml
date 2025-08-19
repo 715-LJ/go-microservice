@@ -3,9 +3,9 @@ services:
     ports:
       - "10010-10019:1001"  # 预留端口范围
     deploy:
-      replicas: 1  # 副本
+      replicas: 2  # 副本
   oae:
     ports:
       - "20010-20019:1002"
     deploy:
-      replicas: 1
+      replicas: 2
